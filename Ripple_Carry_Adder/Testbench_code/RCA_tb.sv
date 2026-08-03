@@ -17,27 +17,29 @@ module RCA_tb;
   );
 
   // Reference model + checker task
-  task automatic check(input [N-1:0] a_val, input [N-1:0] b_val);
-    logic [N:0] expected;   // N+1 bits to capture final carry-out
+  task automatic check(input logic [N-1:0] a_val, input logic [N-1:0] b_val);
     logic [N-1:0] exp_sum;
     logic [N-1:0] exp_carry;
+    logic [N:0] carry_chain;
 
     a = a_val;
     b = b_val;
     #5; // allow combinational settle
 
-    expected  = a_val + b_val;
-    exp_sum   = expected[N-1:0];
-
-    // carry[N-1] should equal the final carry-out bit
-    exp_carry[N-1] = expected[N];
+    carry_chain = '0;
+    for (int i = 0; i < N; i++) begin
+      exp_sum[i] = a_val[i] ^ b_val[i] ^ carry_chain[i];
+      exp_carry[i] = (a_val[i] & b_val[i]) |
+                     (carry_chain[i] & (a_val[i] ^ b_val[i]));
+      carry_chain[i+1] = exp_carry[i];
+    end
 
     tests++;
 
-    if (sum !== exp_sum || carry[N-1] !== exp_carry[N-1]) begin
+    if (sum !== exp_sum || carry !== exp_carry) begin
       errors++;
-      $display("FAIL: a=%0d b=%0d | sum=%0d (exp %0d) | carry_out=%0b (exp %0b)",
-                a_val, b_val, sum, exp_sum, carry[N-1], exp_carry[N-1]);
+      $display("FAIL: a=%0d b=%0d | sum=%0d (exp %0d) | carry=%0b (exp %0b)",
+                a_val, b_val, sum, exp_sum, carry, exp_carry);
     end
   endtask
 
