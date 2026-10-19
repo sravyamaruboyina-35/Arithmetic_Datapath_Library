@@ -51,7 +51,9 @@ module RCA_tb;
     check(1, 1);
     check({N{1'b1}}, 1);          // max value + 1 -> overflow case
     check({N{1'b1}}, {N{1'b1}});  // max + max -> overflow case
-    check(4'b1010, 4'b0101);
+    // Width-safe alternating-pattern test. N'(value) casts the values to N bits.
+    if (N >= 4)
+      check(N'(10), N'(5));
 
     // Exhaustive test for small N (N=4 -> 256 combinations)
     for (int i = 0; i < (1 << N); i++) begin
@@ -60,10 +62,10 @@ module RCA_tb;
       end
     end
 
-    if (errors == 0)
-      $display("ALL %0d TESTS PASSED", tests);
+    if (errors != 0)
+      $fatal(1, "%0d of %0d tests failed", errors, tests);
     else
-      $display("%0d/%0d TESTS FAILED", errors, tests);
+      $display("ALL %0d TESTS PASSED", tests);
 
     $finish;
   end

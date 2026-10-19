@@ -44,7 +44,7 @@ s     = a_in ^ b_in ^ c_in
 c_out = (a_in & b_in) | (c_in & (a_in ^ b_in))
 ```
 
-This is a combinational design. It has no clock, registers, reset, or clock-domain crossings.
+The ripple-carry adder is a purely combinational circuit with no clock or reset. Each bit's carry output depends on the preceding bit's carry, creating a serial combinational carry-propagation path. As the adder width increases, this dependency can increase propagation delay. Clock-based setup and hold analysis is not applicable to this standalone design.
 
 ## Verification
 
@@ -57,6 +57,15 @@ This is a combinational design. It has no clock, registers, reset, or clock-doma
 - Reports `ALL 261 TESTS PASSED` when no mismatch is detected.
 
 The `#5` delay in the checker allows the combinational logic to settle before comparing the outputs.
+
+To run the testbench in Vivado, select `RCA_tb` as the simulation top and choose **Run Behavioral Simulation**. A successful default-width run prints:
+
+```text
+Starting RCA testbench, N=4
+ALL 261 TESTS PASSED
+```
+
+If any comparison fails, the testbench calls `$fatal`, causing the simulator run to report a failure instead of silently completing.
 
 ## FPGA implementation
 
@@ -71,7 +80,7 @@ The constraints in `Constraints/RCA_Con.xdc` use this board mapping:
 | `sum[3:0]` | Four onboard LEDs |
 | `carry[3:0]` | First four pins of Pmod JA |
 
-All external ports are constrained as `LVCMOS33`. Because the RCA is combinational and has no clock, there are no setup/hold clock constraints in this project. Implementation checks should focus on I/O constraints, combinational path delay, and DRC results.
+All external ports are constrained as `LVCMOS33`. Because the RCA is combinational and has no clock, clock-based setup/hold analysis is not applicable. Project results should focus on functional simulation, synthesis resource utilization, implementation DRC, and other relevant implementation results. Optional combinational path-delay measurements should document their measurement method and use appropriate constraints. Do not claim timing closure or a maximum operating frequency for this standalone design.
 
 ## Directory structure
 
@@ -103,7 +112,7 @@ Ripple_Carry_Adder/
 3. Confirm that `Constraints/RCA_Con.xdc` is enabled.
 4. Run behavioral simulation.
 5. Run synthesis and implementation.
-6. Review the utilization and DRC reports.
+6. Review utilization, implementation DRC, and other relevant implementation reports.
 7. Generate the bitstream after all pin and constraint checks pass.
 
 If Vivado reports a missing `RCA.dcp`, remove the stale checkpoint reference from the project and rerun synthesis. A design checkpoint is a generated Vivado artifact; it is not required as a source file for this RTL implementation.
